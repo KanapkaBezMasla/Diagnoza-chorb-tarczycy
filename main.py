@@ -4,7 +4,7 @@ from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.neural_network import MLPClassifier
 from scipy.stats import ttest_rel
 from tabulate import tabulate
-from ReliefF import ReliefF
+from imblearn.over_sampling import SMOTE
 import numpy as np
 
 dataset = 'thyroid4'
@@ -24,6 +24,8 @@ clfs = {
     'MLP_CM': MLPClassifier(hidden_layer_sizes = (400,), max_iter=400, random_state = 75, solver = 'sgd'),
 }
 
+preproc = SMOTE(random_state=1000)
+
 values = []
 n_splits = 5
 n_repeats = 2
@@ -31,14 +33,17 @@ rskf = RepeatedStratifiedKFold(
     n_splits=n_splits, n_repeats=n_repeats, random_state=42)
 scores = np.zeros((len(clfs), n_splits * n_repeats))
 
-for i in range(1, 7):
-    x = [r[:i].tolist() for r in X]
+for i in range(1, 8):
+    x = X[:,  :i]
 
     for fold_id, (train, test) in enumerate(rskf.split(x, y)):
         for clf_id, clf_name in enumerate(clfs):
             clf = clone(clfs[clf_name])
-            clf.fit(X[train], y[train])
-            y_pred = clf.predict(X[test])
+
+            x_train, y_train = preproc.fit_resample(x[train], y[train]) 
+
+            clf.fit(x_train, y_train)
+            y_pred = clf.predict(x[test])
             scores[clf_id, fold_id] = balanced_accuracy_score(y[test], y_pred)
 
     mean = np.mean(scores, axis=1)
@@ -53,8 +58,8 @@ np.save('results', values)
 # ###########################################################################
 # #                        analiza statystyczna                             #
 # ###########################################################################
-scores = np.load('results.npy')
-print(scores)
+# scores = np.load('results.npy')
+# print(scores)
 
 # alfa = .05
 # t_statistic = np.zeros((len(clfs), len(clfs)))
