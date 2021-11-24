@@ -1,5 +1,5 @@
 from sklearn import clone
-from sklearn.metrics import balanced_accuracy_score
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.neural_network import MLPClassifier
 from scipy.stats import ttest_rel
@@ -44,7 +44,7 @@ for i in range(1, 8):
 
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x[test])
-            scores[clf_id, fold_id] = balanced_accuracy_score(y[test], y_pred)
+            scores[clf_id, fold_id] = accuracy_score(y[test], y_pred)
 
     mean = np.mean(scores, axis=1)
     std = np.std(scores, axis=1)
